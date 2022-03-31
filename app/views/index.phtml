@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Filestorage</title>
+    <link type="text/css" rel="stylesheet" href="/assets/volt.css">
+    <link type="text/css" rel="stylesheet" href="/assets/bootstrap-icons.css">
+    <link rel="icon" href="/assets/cloud-upload.svg">
+</head>
+<body>
+<div class="container">
+    <script>
+        function toggleButtons() {
+            const btns = this.querySelectorAll('.btn')
+            for (const btn of btns) {
+                if (btn.disabled === true) {
+                    btn.disabled = false
+                } else if (btn.disabled === false) {
+                    btn.disabled = true
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const forms = document.querySelectorAll('form.sync')
+            for (const form of forms) {
+                form.addEventListener('submit', function (e) {
+                    if (form.__inProgress === true) {
+                        e.preventDefault()
+                        e.stopImmediatePropagation()
+                        toggleButtons.call(this)
+                        return false
+                    }
+
+                    form.__inProgress = true
+                    toggleButtons.call(this)
+                })
+            }
+        })
+    </script>
+    <?= $this->getContent() ?>
+</div>
+<footer class="footer">
+    <div class="container">
+        <div class="footer-brand text-center mt-2">
+            <i class="bi-cloud"></i>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

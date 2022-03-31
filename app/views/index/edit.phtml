@@ -1,0 +1,148 @@
+<?php
+/**
+ * @var string $action
+ * @var string $tokenKey
+ * @var string $tokenValue
+ * @var string $deleteAction
+ * @var string $decryptAction
+ * @var Stored $stored
+ * @var string $pubLink
+ * @var stdClass[] $links
+ * @var string $goHomeLink
+ * @var int $maxPwdLength
+ */
+?>
+
+<h2 class="h4 mt-3 mb-3 overflow-hidden" style="text-overflow: ellipsis">
+    <i class="bi-pencil"></i>
+    Edit uploaded
+    <small class="text-muted" title="<?= $stored->origname ?>"><?= $stored->origname ?></small>
+</h2>
+
+<div class="card card-body border-0 shadow">
+    <form method="post" action="<?= $action ?>" class="sync">
+        <input type="hidden" name="<?= $tokenKey ?>" value="<?= $tokenValue ?>">
+        <div class="row mb-3">
+            <?php foreach ($links as $k => $link): ?>
+                <div class="col">
+                    <label for="link<?= $k ?>">
+                        <?= $link->secret ? 'Private' : 'Public' ?> link
+                    </label>
+                    <div class="input-group">
+                        <div class="input-group-text">
+                            <a href="<?= $link->link ?>" target="_blank" title="Open in new tab">
+                                <i class="font-medium bi-file-earmark<?= $link->secret ? '-lock2' : '' ?>"></i>
+                            </a>
+                        </div>
+                        <textarea style="resize: none;" rows="1" id="link<?= $k ?>"
+                                  class="form-control link-holder"
+                                  readonly><?= $link->link ?></textarea>
+                        <div class="input-group-text py-0">
+                            <button type="button" class="btn btn-secondary link-copier btn-sm"
+                                    title="Copy to clipboard" data-tgt="link<?= $k ?>">
+                                <i class="bi-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <div class="row mb-3">
+            <div class="col">
+                <label for="setPassword">Password</label>
+                <input type="password" id="setPassword" name="password" class="form-control"
+                       maxlength="<?= $maxPwdLength ?>" max="<?= $maxPwdLength ?>">
+                <p class="text-muted">
+                    <?php if (!empty($stored->encrypt)): ?>
+                        Fill to decrypt
+                    <?php else: ?>
+                        Fill to encrypt
+                    <?php endif; ?>
+                </p>
+            </div>
+            <div class="col">
+                <label for="setTill">Will be removed after</label>
+                <div class="input-group">
+                    <div class="input-group-text"><i class="bi-calendar-x"></i></div>
+                    <input type="datetime-local" class="form-control" id="setTill"
+                           value="<?= $stored->till->format('Y-m-d\TH:i') ?>" readonly>
+                </div>
+            </div>
+        </div>
+
+        <?php if ($stored->isImage): ?>
+            <div class="card mb-3">
+                <?php if (!empty($stored->encrypt)): ?>
+                    <h5 class="text-center p-2">File was encrypted. Please fill the password & click "Save" button to
+                        decrypt.</h5>
+                <?php else: ?>
+                    <img alt="" src="<?= $pubLink ?>" id="preview" hidden/>
+                    <div id="cropper"></div>
+                    <input type="hidden" name="cropdata" id="cropdata">
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="buttons">
+            <button type="submit" class="btn btn-primary btn-lg me-2">
+                <i class="bi-check-lg"></i>Save
+            </button>
+            <button type="submit" class="btn btn-danger btn-lg me-2" form="formDelete">
+                <i class="bi-trash"></i>
+                Delete
+            </button>
+            <a href="<?= $goHomeLink ?>" class="btn btn-warning btn-lg me-2">
+                <i class="bi-house"></i>
+                Upload new file
+            </a>
+            <a href="<?= $pubLink ?>" target="_blank" class="btn btn-success btn-lg">
+                <i class="bi-download"></i>
+                Download this file
+            </a>
+        </div>
+    </form>
+</div>
+<form method="post" action="<?= $deleteAction ?>" id="formDelete" class="sync">
+    <input type="hidden" name="<?= $tokenKey ?>" value="<?= $tokenValue ?>">
+</form>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const cpbtns = document.querySelectorAll('.link-copier')
+        for (const cpbtn of cpbtns) {
+            cpbtn.addEventListener('click', async function (evt) {
+                const txtel = document.querySelector(`#${evt.currentTarget.dataset['tgt']}`)
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(txtel.value.trim())
+                    return
+                }
+
+                txtel.focus()
+                txtel.select()
+                try {
+                    document.execCommand('copy')
+                } catch (e) {
+                }
+                txtel.blur()
+            })
+        }
+    })
+</script>
+<?php if ($stored->isImage && empty($stored->encrypt)): ?>
+    <script src="/assets/tinycrop.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const cropData = document.querySelector('#cropdata')
+            const cropper = document.querySelector('#cropper')
+            const preview = document.querySelector('#preview')
+
+            tinycrop
+                .create({
+                    image: preview,
+                    parent: cropper,
+                })
+                .on('end', function ({x, y, width, height}) {
+                    cropData.value = JSON.stringify({x, y, width, height})
+                })
+        })
+    </script>
+<?php endif; ?>

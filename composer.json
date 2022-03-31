@@ -1,0 +1,14 @@
+{
+  "name": "abc/filestorage",
+  "require-dev": {
+    "phalcon/ide-stubs": "^3.4"
+  },
+  "require": {
+    "php": "^7.3",
+    "ext-phalcon": "^3.4",
+    "ext-json": "*",
+    "setasign/fpdf": "^1.8",
+    "setasign/fpdi": "^2.3",
+    "ext-imagick": "*"
+  }
+}

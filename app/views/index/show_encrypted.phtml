@@ -1,0 +1,12 @@
+<?= \Phalcon\Tag::form(['method' => 'post', 'action' => $action]) ?>
+
+<input type="hidden" name="<?= $token_key ?>" value="<?= $token_val ?>">
+
+<div>
+    <label for="setPassword">Please fill encryption password</label>
+    <input type="password" name="password" id="setPassword" class="form-control">
+</div>
+
+<button type="submit" class="btn btn-primary">Decrypt</button>
+
+</form>

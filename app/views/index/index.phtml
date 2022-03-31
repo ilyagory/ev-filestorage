@@ -1,0 +1,112 @@
+<?php
+/**
+ * @var string $action
+ * @var string $tokenKey
+ * @var string $tokenValue
+ * @var string $minDate
+ * @var string $maxDate
+ * @var int $maxFilesize
+ * @var int $maxPwdLength
+ */
+?>
+
+<h2 class="h4 mt-3 mb-3">
+    <i class="bi-cloud-upload"></i>
+    Upload new file
+</h2>
+
+<div class="card card-body border-0 shadow">
+    <form method="post" enctype="multipart/form-data" action="<?= $action ?>" class="sync">
+        <input type="hidden" name="<?= $tokenKey ?>" value="<?= $tokenValue ?>">
+        <div class="row mb-3">
+            <div class="col">
+                <label for="setPassword">Password</label>
+                <input type="password" class="form-control" name="password" id="setPassword"
+                       maxlength="<?= $maxPwdLength ?>" max="<?= $maxPwdLength ?>">
+                <p class="text-muted">If password is set, then file will be encrypted with password.<br>Max
+                    length: <?= $maxPwdLength ?></p>
+            </div>
+            <div class="col">
+                <label for="setTillDate">Please set date till file will be available</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi-calendar-x"></i>
+                    </span>
+                    <input class="form-control" type="datetime-local" name="tillDate" id="setTillDate"
+                           min="<?= $minDate ?>" max="<?= $maxDate ?>">
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="fileChoose" class="form-label">Please select files to upload</label>
+            <input class="form-control form-control-lg" id="fileChoose" type="file" name="payload" required>
+            <p class="text-muted">Max. file size: <?= $maxFilesize / (1024 * 1024) ?>MB</p>
+        </div>
+
+        <div class="mb-3" hidden id="image-section">
+            <div class="h5">
+                <i class="bi-crop"></i>
+                Preview & crop image
+            </div>
+            <div id="cropper"></div>
+        </div>
+
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-lg btn-primary">
+                <i class="bi-check-lg"></i>
+                Do Upload
+            </button>
+        </div>
+        <input type="hidden" id="cropdata" name="cropdata"/>
+    </form>
+</div>
+<script src="/assets/tinycrop.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const cropper = document.querySelector('#cropper')
+        const cropData = document.querySelector('#cropdata')
+        const imgSection = document.querySelector('#image-section')
+        let cropInstance = null
+
+        document.querySelector('#fileChoose')
+            .addEventListener('change', function () {
+                while (cropper.firstChild) cropper.removeChild(cropper.firstChild)
+                if (cropInstance !== null) {
+                    cropInstance.listeners.clearAll()
+                    cropInstance = null
+                    cropData.value = null
+                    imgSection.hidden = true
+                }
+
+                const file = this.files[0]
+                let preview = null
+                cropInstance = null
+
+                if (file === undefined) return
+                if (file.size > <?= $maxFilesize?>) {
+                    this.value = ''
+                    alert(`Error!\nMaximum file size: <?= $maxFilesize / (1024 * 1024) ?>MB, yours: ${Math.ceil(file.size / (1024 * 1024))}MB.\nPlease choose another file.`)
+                    return
+                }
+
+                if (!file.type.startsWith('image/')) return
+                preview = new Image
+                const reader = new FileReader
+                reader.onload = function () {
+                    preview.src = this.result
+                    imgSection.hidden = false
+                }
+                reader.onloadend = function () {
+                    cropInstance = tinycrop.create({
+                        parent: cropper,
+                        image: preview,
+                    }).on('end', function ({x, y, width, height}) {
+                        cropData.value = JSON.stringify({x, y, width, height})
+                    })
+                }
+
+                reader.readAsDataURL(file)
+            })
+    })
+</script>
